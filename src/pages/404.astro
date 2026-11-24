@@ -1,0 +1,10 @@
+---
+import Base from '../layouts/Base.astro';
+import { u } from '../lib/site';
+---
+<Base title="Page not found" path={u('/404')} noindex>
+  <div class="wrap section" style="border-top:0">
+    <h1 class="art-title">Page not found</h1>
+    <p>This page does not exist or has moved. <a href={u('/')}>Go to the home page</a>.</p>
+  </div>
+</Base>

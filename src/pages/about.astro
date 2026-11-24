@@ -1,0 +1,30 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE, u } from '../lib/site';
+import { getSettings, md } from '../lib/data';
+const st = await getSettings();
+const links: { label: string; url: string }[] = st.links ?? [];
+const ld = { '@context': 'https://schema.org', '@type': 'Person', name: SITE.name, alternateName: SITE.nameBn, nationality: 'Bangladeshi',
+  description: SITE.description, email: st.contact_email || undefined, sameAs: links.map(l => l.url) };
+---
+<Base title="About" description={`About ${SITE.name}: background, journey and how to get in touch.`} path={u('/about')} jsonLd={ld}>
+  <article class="wrap section" style="border-top:0">
+    <h1 class="art-title">About me</h1>
+    <div class="cols">
+      <div><h2>Background</h2></div>
+      <div class="prose">
+        {st.about_en ? <div set:html={md(st.about_en)} /> : <p>Write your story in the dashboard under Settings.</p>}
+        {st.about_bn && <div class="bn" set:html={md(st.about_bn)} />}
+      </div>
+    </div>
+    {(st.contact_email || links.length > 0) && (
+      <div class="cols" style="margin-top:2.5rem">
+        <div><h2>Contact</h2></div>
+        <div>
+          {st.contact_email && <p><a href={`mailto:${st.contact_email}`}>{st.contact_email}</a></p>}
+          {links.length > 0 && <ul>{links.map(l => <li><a href={l.url} rel="me noopener">{l.label}</a></li>)}</ul>}
+        </div>
+      </div>
+    )}
+  </article>
+</Base>

@@ -1,0 +1,46 @@
+---
+import '../styles/global.css';
+import { SITE, NAV, u } from '../lib/site';
+interface Props { title?: string; description?: string; path?: string; type?: 'website' | 'article'; jsonLd?: object; noindex?: boolean; }
+const { title, description = SITE.description, path = Astro.url.pathname, type = 'website', jsonLd, noindex = false } = Astro.props;
+const adsense = import.meta.env.PUBLIC_ADSENSE_ID;
+const full = title ? `${title} | ${SITE.name}` : `${SITE.name}: writer, volunteer, cook, maker`;
+const canonical = new URL(path, Astro.site).href;
+const current = Astro.url.pathname.replace(/\/$/, '');
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{full}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonical} />
+  <link rel="icon" href={u('/favicon.svg')} type="image/svg+xml" />
+  {noindex && <meta name="robots" content="noindex,nofollow" />}
+  {adsense && <script is:inline async crossorigin="anonymous" src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsense}`}></script>}
+  <meta property="og:title" content={full} />
+  <meta property="og:description" content={description} />
+  <meta property="og:type" content={type} />
+  <meta property="og:url" content={canonical} />
+  <meta property="og:site_name" content={SITE.name} />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Hind+Siliguri:wght@400;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet" />
+  {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="site-head">
+    <div class="wrap">
+      <a class="brand" href={u('/')}>{SITE.name}</a>
+      <nav class="nav" aria-label="Main">
+        {NAV.map(n => <a href={n.href} aria-current={current === n.href.replace(/\/$/, '') ? 'page' : undefined}>{n.label}</a>)}
+      </nav>
+    </div>
+  </header>
+  <main id="main"><slot /></main>
+  <footer class="site-foot"><div class="wrap">© {new Date().getFullYear()} {SITE.name}. <span class="bn">{SITE.nameBn}</span></div></footer>
+</body>
+</html>

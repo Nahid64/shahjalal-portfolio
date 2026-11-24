@@ -1,0 +1,60 @@
+---
+import Base from '../layouts/Base.astro';
+import AdSlot from '../components/AdSlot.astro';
+import { SITE, SECTIONS, u } from '../lib/site';
+
+import { getGallery, getAllPosts, getRecipes, getCookingLog, getVolunteer, getSettings, titleOf, fmt, type Row } from '../lib/data';
+const [highlights, posts, recipes, log, vol, settings] = await Promise.all([getGallery('hero_highlights'), getAllPosts(), getRecipes(), getCookingLog(), getVolunteer(), getSettings()]);
+const label = (slug: string) => SECTIONS.find(x => x.slug === slug)?.label ?? slug;
+const recent = [
+  ...posts.map((p: Row) => ({ at: p.published_at, title: titleOf(p), href: `/${p.section}/${p.slug}`, section: label(p.section), blurb: p.excerpt })),
+  ...recipes.map((r: Row) => ({ at: r.published_at, title: titleOf(r), href: `/kitchen/recipes/${r.slug}`, section: 'Kitchen', blurb: r.summary })),
+  ...log.map((l: Row) => ({ at: l.published_at, title: l.dish, href: `/kitchen/log/${l.slug}`, section: 'Kitchen', blurb: l.occasion })),
+  ...vol.map((v: Row) => ({ at: v.published_at, title: v.title, href: `/volunteer/${v.slug}`, section: 'Volunteer work', blurb: v.summary })),
+].sort((a, b) => +new Date(b.at) - +new Date(a.at)).slice(0, 5);
+const ld = { '@context': 'https://schema.org', '@type': 'Person', name: SITE.name, alternateName: SITE.nameBn, description: SITE.description, url: Astro.site?.href };
+---
+<Base jsonLd={ld} path={u('/')}>
+  <section class="hero wrap">
+    <h1>{SITE.name}</h1>
+    <p class="bn-name">{SITE.nameBn}</p>
+    <p class="lede">{settings.hero_intro_en || 'I write poems and stories, volunteer, cook, build miniatures and am training to work in a security operations center.'}</p>
+    {settings.hero_intro_bn && <p class="lede bn">{settings.hero_intro_bn}</p>}
+    <div class="actions">
+      <a class="btn primary" href={u('/writing')}>Read my writing</a>
+      <a class="btn" href={u('/about')}>About me</a>
+    </div>
+  </section>
+
+  {highlights.length > 0 && (
+  <section class="section wrap" aria-labelledby="work">
+    <h2 id="work">Selected work</h2>
+    <div class="frames">
+      {highlights.map(h => <figure class="frame"><div class="img"><img src={h.image_url} alt={h.alt_text || h.caption || 'Featured work'} loading="lazy" /></div>{h.caption && <figcaption>{h.caption}</figcaption>}</figure>)}
+    </div>
+  </section>
+  )}
+
+  {recent.length > 0 && (
+  <section class="section wrap" aria-labelledby="recent">
+    <h2 id="recent">Recently added</h2>
+    <ul class="rows">
+      {recent.map(r => (
+        <li><span class="when">{fmt(r.at)}</span>
+          <div><h3><a href={u(r.href)}>{r.title}</a></h3><p>{r.section}{r.blurb ? ': ' + r.blurb : ''}</p></div></li>
+      ))}
+    </ul>
+  </section>
+  )}
+
+  <section class="section wrap" aria-labelledby="explore">
+    <h2 id="explore">Browse by section</h2>
+    <ul class="rows">
+      {SECTIONS.map(s => (
+        <li><span class="when bn">{s.bn}</span>
+          <div><h3><a href={u('/' + s.slug)}>{s.label}</a></h3><p>{s.blurb}</p></div></li>
+      ))}
+    </ul>
+    <AdSlot slot="" />
+  </section>
+</Base>

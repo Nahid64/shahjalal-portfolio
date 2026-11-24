@@ -1,0 +1,28 @@
+---
+import Base from '../../layouts/Base.astro';
+import { SECTIONS, u } from '../../lib/site';
+import { getRecipes, getCookingLog, titleOf, fmt } from '../../lib/data';
+const s = SECTIONS.find(x => x.slug === 'kitchen')!;
+const [recipes, log] = await Promise.all([getRecipes(), getCookingLog()]);
+---
+<Base title={s.label} description={s.blurb} path={u('/kitchen')}>
+  <div class="wrap section" style="border-top:0">
+    <h1 class="art-title">{s.label}</h1>
+    <p class="bn muted">{s.bn}</p>
+    <p>{s.blurb}</p>
+    <h2>Recipes</h2>
+    {recipes.length === 0 ? <p class="muted">No recipes yet.</p> : (
+      <ul class="rows">{recipes.map(r => (
+        <li><span class="when">{[r.prep_minutes && `Prep ${r.prep_minutes} min`, r.cook_minutes && `Cook ${r.cook_minutes} min`].filter(Boolean).join(', ')}</span>
+          <div><h3><a href={u('/kitchen/recipes/' + r.slug)}>{titleOf(r)}</a></h3>{r.summary && <p>{r.summary}</p>}</div></li>
+      ))}</ul>
+    )}
+    <h2 style="margin-top:3rem">Cooking log</h2>
+    {log.length === 0 ? <p class="muted">No entries yet.</p> : (
+      <ul class="rows">{log.map(l => (
+        <li><span class="when">{fmt(l.cooked_on)}</span>
+          <div><h3><a href={u('/kitchen/log/' + l.slug)}>{l.dish}</a></h3><p>{[l.occasion, l.location].filter(Boolean).join(', ')}</p></div></li>
+      ))}</ul>
+    )}
+  </div>
+</Base>

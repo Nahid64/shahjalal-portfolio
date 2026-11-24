@@ -1,0 +1,26 @@
+---
+import Base from '../../layouts/Base.astro';
+import AdSlot from '../../components/AdSlot.astro';
+import { SITE, u } from '../../lib/site';
+import { getVolunteer, md, fmt, embedUrl } from '../../lib/data';
+export async function getStaticPaths() { return (await getVolunteer()).map(e => ({ params: { slug: e.slug }, props: { e } })); }
+const { e } = Astro.props;
+const media: any[] = e.media ?? [];
+const photos = media.filter(m => m.type === 'photo');
+const videos = media.filter(m => m.type === 'video');
+const awards = media.filter(m => m.type === 'award' || m.type === 'certificate');
+const ld = { '@context': 'https://schema.org', '@type': 'Article', headline: e.title, datePublished: e.published_at, dateModified: e.updated_at,
+  description: e.summary || undefined, author: { '@type': 'Person', name: SITE.name } };
+---
+<Base title={e.title} description={e.summary || undefined} path={u('/volunteer/' + e.slug)} type="article" jsonLd={ld}>
+  <article class="wrap section" style="border-top:0">
+    <p><a href={u('/volunteer')}>Volunteer work</a></p>
+    <h1 class="art-title">{e.title}</h1>
+    <p class="facts">{[e.organization, e.role, e.location].filter(Boolean).join(', ')}{e.start_date ? `. ${fmt(e.start_date)} to ${e.end_date ? fmt(e.end_date) : 'present'}` : ''}</p>
+    <div class="prose" set:html={md(e.story_md)} />
+    {photos.length > 0 && <><h2>Photos</h2><div class="grid">{photos.map(p => <figure style="margin:0"><img src={p.url} alt={p.caption || e.title} loading="lazy" />{p.caption && <figcaption class="muted">{p.caption}</figcaption>}</figure>)}</div></>}
+    {videos.length > 0 && <><h2>Videos</h2>{videos.map(v => embedUrl(v.url) ? <iframe class="video" src={embedUrl(v.url)!} title={v.caption || e.title} loading="lazy" allowfullscreen></iframe> : <p><a href={v.url}>{v.caption || v.url}</a></p>)}</>}
+    {awards.length > 0 && <><h2>Awards and certificates</h2><ul class="awards">{awards.map(a => <li><img src={a.url} alt={a.title || 'Award'} loading="lazy" /><p><strong>{a.title}</strong>{a.issuer ? `, ${a.issuer}` : ''}{a.date ? `. ${fmt(a.date)}` : ''}</p></li>)}</ul></>}
+    <AdSlot slot="" />
+  </article>
+</Base>

@@ -1,0 +1,31 @@
+---
+import Base from '../../layouts/Base.astro';
+import Carousel from '../../components/Carousel.tsx';
+import { SECTIONS, u } from '../../lib/site';
+import { getGallery, type Row } from '../../lib/data';
+const s = SECTIONS.find(x => x.slug === 'miniatures')!;
+const items = await getGallery('miniatures');
+const groups = new Map<string, Row[]>();
+items.forEach(it => { const k = it.group_key || it.id; groups.set(k, [...(groups.get(k) ?? []), it]); });
+const slides = items.map(i => ({ src: i.image_url, alt: i.alt_text || i.title || 'Miniature', caption: i.title || '' }));
+---
+<Base title={s.label} description={s.blurb} path={u('/miniatures')}>
+  <div class="wrap section" style="border-top:0">
+    <h1 class="art-title">{s.label}</h1>
+    <p class="bn muted">{s.bn}</p>
+    <p>{s.blurb}</p>
+    {items.length === 0 ? <p class="muted">No miniatures published yet.</p> : (
+      <>
+        <Carousel client:load slides={slides} />
+        <h2>Gallery</h2>
+        {[...groups.values()].map(g => (
+          <section>
+            {g[0].title && <h3>{g[0].title}</h3>}
+            {g[0].description && <p>{g[0].description}</p>}
+            <div class="grid">{g.map(i => <img src={i.image_url} alt={i.alt_text || i.title || 'Miniature'} loading="lazy" />)}</div>
+          </section>
+        ))}
+      </>
+    )}
+  </div>
+</Base>

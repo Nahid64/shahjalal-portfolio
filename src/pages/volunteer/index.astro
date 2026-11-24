@@ -1,0 +1,25 @@
+---
+import Base from '../../layouts/Base.astro';
+import { SECTIONS, u } from '../../lib/site';
+import { getVolunteer } from '../../lib/data';
+const s = SECTIONS.find(x => x.slug === 'volunteer')!;
+const rows = await getVolunteer();
+const yr = (d?: string) => (d ? new Date(d).getFullYear() : '');
+---
+<Base title={s.label} description={s.blurb} path={u('/volunteer')}>
+  <div class="wrap section" style="border-top:0">
+    <h1 class="art-title">{s.label}</h1>
+    <p class="bn muted">{s.bn}</p>
+    <p>{s.blurb}</p>
+    {rows.length === 0 ? <p class="muted">Nothing is published here yet.</p> : (
+      <ul class="rows">
+        {rows.map(r => (
+          <li><span class="when">{yr(r.start_date)}{r.start_date ? ' to ' : ''}{r.end_date ? yr(r.end_date) : r.start_date ? 'present' : ''}</span>
+            <div><h3><a href={u('/volunteer/' + r.slug)}>{r.title}</a></h3>
+              <p>{[r.organization, r.role, r.location].filter(Boolean).join(', ')}</p>
+              {r.summary && <p>{r.summary}</p>}</div></li>
+        ))}
+      </ul>
+    )}
+  </div>
+</Base>

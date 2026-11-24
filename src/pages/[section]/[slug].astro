@@ -1,0 +1,32 @@
+---
+import Base from '../../layouts/Base.astro';
+import AdSlot from '../../components/AdSlot.astro';
+import { SECTIONS, SITE, u } from '../../lib/site';
+import { getPosts, md, fmt, titleOf } from '../../lib/data';
+export async function getStaticPaths() {
+  const out: any[] = [];
+  for (const section of ['writing', 'security', 'thoughts'])
+    for (const post of await getPosts(section)) out.push({ params: { section, slug: post.slug }, props: { post } });
+  return out;
+}
+const { post } = Astro.props;
+const s = SECTIONS.find(x => x.slug === post.section)!;
+const path = u(`/${post.section}/${post.slug}`);
+const ld = {
+  '@context': 'https://schema.org', '@type': 'BlogPosting', headline: titleOf(post),
+  datePublished: post.published_at, dateModified: post.updated_at, image: post.cover_url || undefined,
+  description: post.seo_description || post.excerpt || undefined, keywords: (post.tags ?? []).join(', ') || undefined,
+  author: { '@type': 'Person', name: SITE.name },
+};
+---
+<Base title={titleOf(post)} description={post.seo_description || post.excerpt || undefined} path={path} type="article" jsonLd={ld}>
+  <article class="wrap section" style="border-top:0">
+    <p><a href={u('/' + post.section)}>{s.label}</a></p>
+    <h1 class="art-title">{titleOf(post)}</h1>
+    {post.title_bn && post.title_en && <p class="bn muted" style="font-size:1.4rem">{post.title_bn}</p>}
+    <p class="muted"><time datetime={post.published_at}>{fmt(post.published_at)}</time>{post.tags?.length ? <span>. Tagged {post.tags.join(', ')}</span> : null}</p>
+    {post.cover_url && <img class="cover" src={post.cover_url} alt="" loading="lazy" />}
+    <div class="prose" set:html={md(post.body_md)} />
+    <AdSlot slot="" />
+  </article>
+</Base>

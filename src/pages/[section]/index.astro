@@ -1,0 +1,41 @@
+---
+import Base from '../../layouts/Base.astro';
+import PostsIndex from '../../components/PostsIndex.astro';
+import AdSlot from '../../components/AdSlot.astro';
+import { SECTIONS, u } from '../../lib/site';
+import { getPosts, getTools, type Row } from '../../lib/data';
+export function getStaticPaths() { return ['writing', 'security', 'thoughts'].map(section => ({ params: { section } })); }
+const section = Astro.params.section!;
+const s = SECTIONS.find(x => x.slug === section)!;
+const rows = await getPosts(section);
+const tools: Row[] = section === 'security' ? await getTools() : [];
+const byCat = Object.entries(tools.reduce((a: Record<string, Row[]>, t) => { (a[t.category] ??= []).push(t); return a; }, {}));
+const CAT: Record<string, string> = { siem: 'SIEM and logging', edr: 'Endpoint detection', network: 'Network analysis', forensics: 'Forensics', vuln: 'Vulnerability scanning', osint: 'Open-source intelligence', scripting: 'Scripting and automation', other: 'Other tools' };
+const LEVEL: Record<string, string> = { learning: 'Learning', practiced: 'Practiced', comfortable: 'Comfortable' };
+---
+<Base title={s.label} description={s.blurb} path={u('/' + section)}>
+  <div class="wrap section" style="border-top:0">
+    <h1 class="art-title">{s.label}</h1>
+    <p class="bn muted">{s.bn}</p>
+    <p>{s.blurb}</p>
+    {byCat.length > 0 && (
+      <section aria-labelledby="tools" style="margin-bottom:3rem">
+        <h2 id="tools">Tools I have learned</h2>
+        {byCat.map(([cat, list]) => (
+          <div>
+            <h3>{CAT[cat] ?? cat}</h3>
+            <ul class="rows">
+              {list.map(t => (
+                <li><span class="when">{LEVEL[t.level] ?? t.level}</span>
+                  <div><h3 style="font-size:1.05rem">{t.url ? <a href={t.url}>{t.name}</a> : t.name}</h3>{t.description && <p>{t.description}</p>}</div></li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </section>
+    )}
+    {section === 'security' && <h2>Notes and write-ups</h2>}
+    <PostsIndex base={section} rows={rows} />
+    <AdSlot slot="" />
+  </div>
+</Base>

@@ -1,0 +1,11 @@
+---
+// Renders nothing until PUBLIC_ADSENSE_ID is set; reserves fixed height so layout never shifts.
+const id = import.meta.env.PUBLIC_ADSENSE_ID;
+const { slot = '' } = Astro.props;
+---
+{id && slot && (
+  <aside class="ad-slot" aria-label="Advertisement">
+    <ins class="adsbygoogle" style="display:block" data-ad-client={id} data-ad-slot={slot} data-ad-format="auto"></ins>
+    <script is:inline>(window.adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </aside>
+)}

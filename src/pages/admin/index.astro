@@ -1,0 +1,10 @@
+---
+import Base from '../../layouts/Base.astro';
+import Admin from '../../components/Admin.tsx';
+import { u } from '../../lib/site';
+---
+<Base title="Dashboard" path={u('/admin')} noindex>
+  <div class="wrap section" style="border-top:0">
+    <Admin client:only="react" />
+  </div>
+</Base>

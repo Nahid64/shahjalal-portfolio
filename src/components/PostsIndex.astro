@@ -1,0 +1,50 @@
+---
+import { u } from '../lib/site';
+import { fmt, titleOf, type Row } from '../lib/data';
+interface Props { base: string; rows: Row[]; }
+const { base, rows } = Astro.props;
+const kinds = [...new Set(rows.map(r => r.kind as string))];
+---
+{rows.length === 0 ? <p class="muted">Nothing is published here yet.</p> : (
+  <>
+    <div class="filters">
+      <label>Search <input id="q" type="search" /></label>
+      {kinds.length > 1 && (
+        <label>Type <select id="kind"><option value="">All</option>
+          {kinds.map(k => <option value={k}>{k.replace('_', ' ')}</option>)}</select></label>
+      )}
+    </div>
+    <ul class="rows" id="list">
+      {rows.map(r => (
+        <li data-kind={r.kind} data-text={[titleOf(r), r.title_bn, r.excerpt, (r.tags ?? []).join(' ')].join(' ').toLowerCase()}>
+          <span class="when">{fmt(r.published_at)}</span>
+          <div>
+            <h3><a href={u(`/${base}/${r.slug}`)}>{titleOf(r)}</a></h3>
+            {r.title_bn && r.title_en && <p class="bn">{r.title_bn}</p>}
+            {r.excerpt && <p>{r.excerpt}</p>}
+          </div>
+        </li>
+      ))}
+    </ul>
+    <p id="none" class="muted" hidden>No entries match.</p>
+  </>
+)}
+<script>
+  const q = document.querySelector<HTMLInputElement>('#q');
+  const k = document.querySelector<HTMLSelectElement>('#kind');
+  const items = [...document.querySelectorAll<HTMLElement>('#list li')];
+  const none = document.getElementById('none');
+  function apply() {
+    const t = (q?.value ?? '').trim().toLowerCase();
+    const kind = k?.value ?? '';
+    let n = 0;
+    items.forEach(li => {
+      const ok = (!t || (li.dataset.text ?? '').includes(t)) && (!kind || li.dataset.kind === kind);
+      li.hidden = !ok;
+      if (ok) n++;
+    });
+    if (none) none.hidden = n > 0;
+  }
+  q?.addEventListener('input', apply);
+  k?.addEventListener('change', apply);
+</script>

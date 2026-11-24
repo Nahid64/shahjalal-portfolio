@@ -1,0 +1,30 @@
+---
+import Base from '../../../layouts/Base.astro';
+import AdSlot from '../../../components/AdSlot.astro';
+import { SITE, u } from '../../../lib/site';
+import { getRecipes, titleOf, iso } from '../../../lib/data';
+export async function getStaticPaths() { return (await getRecipes()).map(r => ({ params: { slug: r.slug }, props: { r } })); }
+const { r } = Astro.props;
+const ing: any[] = r.ingredients ?? [];
+const steps: any[] = r.steps ?? [];
+const ld = { '@context': 'https://schema.org', '@type': 'Recipe', name: titleOf(r), description: r.summary || undefined, image: r.cover_url || undefined,
+  datePublished: r.published_at, author: { '@type': 'Person', name: SITE.name },
+  prepTime: iso(r.prep_minutes), cookTime: iso(r.cook_minutes), recipeYield: r.servings ? `${r.servings} servings` : undefined,
+  recipeIngredient: ing.map(i => [i.qty, i.item].filter(Boolean).join(' ')),
+  recipeInstructions: steps.map(s => ({ '@type': 'HowToStep', text: s.text })) };
+---
+<Base title={titleOf(r)} description={r.summary || undefined} path={u('/kitchen/recipes/' + r.slug)} type="article" jsonLd={ld}>
+  <article class="wrap section" style="border-top:0">
+    <p><a href={u('/kitchen')}>Kitchen</a></p>
+    <h1 class="art-title">{titleOf(r)}</h1>
+    {r.title_bn && r.title_en && <p class="bn muted" style="font-size:1.4rem">{r.title_bn}</p>}
+    <p class="facts">{[r.prep_minutes && `Prep ${r.prep_minutes} min`, r.cook_minutes && `Cook ${r.cook_minutes} min`, r.servings && `Serves ${r.servings}`].filter(Boolean).join('. ')}</p>
+    {r.cover_url && <img class="cover" src={r.cover_url} alt={titleOf(r)} loading="lazy" />}
+    {r.summary && <p>{r.summary}</p>}
+    <div class="cols">
+      <div><h2>Ingredients</h2><ul>{ing.map(i => <li>{[i.qty, i.item].filter(Boolean).join(' ')}</li>)}</ul></div>
+      <div><h2>Method</h2><ol>{steps.map(s => <li>{s.text}</li>)}</ol></div>
+    </div>
+    <AdSlot slot="" />
+  </article>
+</Base>

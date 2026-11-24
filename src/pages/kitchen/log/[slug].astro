@@ -1,0 +1,23 @@
+---
+import Base from '../../../layouts/Base.astro';
+import { SITE, u } from '../../../lib/site';
+import { getCookingLog, getRecipes, md, fmt, titleOf } from '../../../lib/data';
+export async function getStaticPaths() {
+  const [log, recipes] = await Promise.all([getCookingLog(), getRecipes()]);
+  return log.map(l => ({ params: { slug: l.slug }, props: { l, recipe: recipes.find(r => r.id === l.recipe_id) } }));
+}
+const { l, recipe } = Astro.props;
+const about = [l.occasion, l.location].filter(Boolean).join(', ');
+const ld = { '@context': 'https://schema.org', '@type': 'Article', headline: `${l.dish} on ${fmt(l.cooked_on)}`, datePublished: l.published_at,
+  image: l.photo_url || undefined, author: { '@type': 'Person', name: SITE.name } };
+---
+<Base title={l.dish} description={`${l.dish}${about ? ': ' + about : ''}. Cooking log, ${fmt(l.cooked_on)}.`} path={u('/kitchen/log/' + l.slug)} type="article" jsonLd={ld}>
+  <article class="wrap section" style="border-top:0">
+    <p><a href={u('/kitchen')}>Kitchen</a></p>
+    <h1 class="art-title">{l.dish}</h1>
+    <p class="facts"><time datetime={l.cooked_on}>{fmt(l.cooked_on)}</time>{about ? `. ${about}` : ''}</p>
+    {l.photo_url && <img class="cover" src={l.photo_url} alt={l.dish} loading="lazy" />}
+    {l.notes && <div class="prose" set:html={md(l.notes)} />}
+    {recipe && <p>Recipe: <a href={u('/kitchen/recipes/' + recipe.slug)}>{titleOf(recipe)}</a></p>}
+  </article>
+</Base>
